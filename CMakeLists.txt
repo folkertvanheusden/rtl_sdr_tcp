@@ -1,13 +1,12 @@
 project(rtl_tcp_client)
 cmake_minimum_required(VERSION 3.2)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_executable(
   rtl_tcp_client
   error.cpp
-  filter.cpp
   main.cpp
   net.cpp
 )
