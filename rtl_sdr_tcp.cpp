@@ -74,13 +74,13 @@ void rtl_sdr_tcp::operator()()
 
 				fd = -1;
 			}
+
+			if (fd != -1)
+				set_frequency(frequency);
+
+			if (fd != -1)
+				set_samplerate(sample_rate);
 		}
-
-		if (fd != -1)
-			set_frequency(frequency);
-
-		if (fd != -1)
-			set_samplerate(sample_rate);
 
 		if (fd == -1)
 			continue;
