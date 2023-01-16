@@ -74,11 +74,14 @@ public:
 	}
 
 	void operator()() {
-		int  sample_rate = rst->get_sample_rate();
+		int  sdr_sample_rate = rst->get_sample_rate();
 
-		auto iqs         = rst->get_iqs();
+		int  fragment_samples= rst->get_fragment_size();
+		int  fragment_size   = fragment_samples / 2;
 
-		int  max_n_in    = 1;
+		auto iqs             = rst->get_iqs();
+
+		int  max_n_in        = 1;
 
 		for(;;) {
 			auto   iq  = iqs->get();
@@ -95,14 +98,12 @@ public:
 
 			auto   values = iq.value().data;
 
-			int    n_values = sizeof(values) / 2;
-
-			float  decoded[n_values];
+			float  decoded[fragment_size];
 
 			double in1    = 0;
 			double qn1    = 0;
 
-			for(int i=0; i<n_values; i++) {
+			for(int i=0; i<fragment_size; i++) {
 				int o = i * 2;
 
 				double in = (values[o + 0] - 128) / 128.0;
@@ -117,7 +118,7 @@ public:
 			float *resampled   = nullptr;
 			int    n_resampled = 0;
 
-			resample(decoded, sample_rate, n_values, &resampled, sample_rate, &n_resampled);
+			resample(decoded, sdr_sample_rate, fragment_size, &resampled, sample_rate, &n_resampled);
 
 			{
 				std::unique_lock<std::mutex> lck(lock);
@@ -140,7 +141,7 @@ public:
 
 		while(after >= this->t)
 			cv.wait(lck);
-		
+
 		*samples   = reinterpret_cast<float *>(duplicate(this->samples, this->n_samples * sizeof(float)));
 		*n_samples = this->n_samples;
 		*t         = this->t;
