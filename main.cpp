@@ -59,7 +59,13 @@ public:
 		delete iqs;
 	}
 
-	auto get_iqs() { return iqs; }
+	auto get_iqs() {
+		return iqs;
+	}
+
+	int get_sample_rate() {
+		return sample_rate;
+	}
 
 	void set_frequency(const uint32_t f) {
 		frequency = f;
@@ -116,19 +122,20 @@ public:
 void resample(const float *const in_float, const int in_rate, const int n_samples, float **const out, const int out_rate, int *const out_n_samples)
 {
         double ratio = out_rate / double(in_rate);
+
         *out_n_samples = ceil(n_samples * ratio);
 
-        *out = new float[*out_n_samples];
+        *out = new float[*out_n_samples]();
 
         SRC_DATA sd;
-        sd.data_in = in_float;
-        sd.data_out = *out;
-        sd.input_frames = n_samples;
-        sd.output_frames = *out_n_samples;
+        sd.data_in           = in_float;
+        sd.data_out          = *out;
+        sd.input_frames      = n_samples;
+        sd.output_frames     = *out_n_samples;
         sd.input_frames_used = 0;
         sd.output_frames_gen = 0;
-        sd.end_of_input = 0;
-        sd.src_ratio = ratio;
+        sd.end_of_input      = 0;
+        sd.src_ratio         = ratio;
 
         int rc = -1;
         if ((rc = src_simple(&sd, SRC_SINC_BEST_QUALITY, 1)) != 0)
@@ -142,7 +149,9 @@ int main(int argc, char *argv[])
 
 	sdr_instance.set_frequency(96000000);
 
-	auto iqs = sdr_instance.get_iqs();
+	int  sample_rate = sdr_instance.get_sample_rate();
+
+	auto iqs         = sdr_instance.get_iqs();
 
 	for(;;) {
 		auto   iq  = iqs->get();
@@ -174,6 +183,15 @@ int main(int argc, char *argv[])
 			in1 = in;
 			qn1 = qn;
 		}
+
+		float *resampled   = nullptr;
+		int    n_resampled = 0;
+
+		resample(decoded, sample_rate, n_values, &resampled, 8000, &n_resampled);
+
+		// TODO
+
+		delete [] resampled;
 	}
 
 	return 0;

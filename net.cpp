@@ -14,15 +14,15 @@
 int connect_to(const char *host, const int portnr)
 {
 	struct addrinfo hints = { 0 };
-	hints.ai_family = AF_UNSPEC;    // Allow IPv4 or IPv6
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;    // For wildcard IP address
-	hints.ai_protocol = 0;          // Any protocol
+	hints.ai_family    = AF_UNSPEC;    // Allow IPv4 or IPv6
+	hints.ai_socktype  = SOCK_STREAM;
+	hints.ai_flags     = AI_PASSIVE;    // For wildcard IP address
+	hints.ai_protocol  = 0;          // Any protocol
 	hints.ai_canonname = nullptr;
-	hints.ai_addr = nullptr;
-	hints.ai_next = nullptr;
+	hints.ai_addr      = nullptr;
+	hints.ai_next      = nullptr;
 
-	char portnr_str[8] = { 0 };
+	char portnr_str[8] { 0 };
 	snprintf(portnr_str, sizeof portnr_str, "%d", portnr);
 
 	struct addrinfo *result = nullptr;
@@ -52,6 +52,7 @@ int connect_to(const char *host, const int portnr)
 void set_nodelay(int fd)
 {
 	int on = 1;
+
 	if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(int)) == -1)
 		error_exit(true, "TCP_NODELAY");
 }
