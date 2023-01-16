@@ -209,13 +209,17 @@ void cb_end_session(sip_session_t *const session)
 
 bool cb_dtmf(const uint8_t dtmf_code, const bool is_end, const uint8_t volume, sip_session_t *const session)
 {
-	printf("DTMF pressed: %d\n", dtmf_code);
-
 	session_t *p = reinterpret_cast<session_t *>(session->private_data);
 
 	if (is_end && dtmf_code != p->prev_key) {
+		printf("DTMF pressed: %d\n", dtmf_code);
+
 		if (dtmf_code == 11) {  // '#'
-			reinterpret_cast<context_t *>(session->global_private_data)->sdr_instance->set_frequency(std::atol(p->keys_pressed.c_str()) * 1000l);
+			uint32_t f = std::atol(p->keys_pressed.c_str()) * 1000l;
+
+			printf("Set frequency to %d\n", f);
+
+			reinterpret_cast<context_t *>(session->global_private_data)->sdr_instance->set_frequency(f);
 
 			p->keys_pressed.clear();
 		}
@@ -245,6 +249,8 @@ int main(int argc, char *argv[])
 
 	// sip s("10.208.11.13", "3737", "1234", { }, 0, 60, 44100, cb_new_session, cb_recv, cb_send, cb_end_session, cb_dtmf, &c);
 	sip s("192.168.64.13", "3737", "1234", { }, 0, 60, 44100, cb_new_session, cb_recv, cb_send, cb_end_session, cb_dtmf, &c);
+
+	printf("started\n");
 
 	pause();
 
