@@ -243,6 +243,8 @@ bool cb_dtmf(const uint8_t dtmf_code, const bool is_end, const uint8_t volume, s
 
 int main(int argc, char *argv[])
 {
+	printf("rtl_sdr_to_sip (c) 2023 by Folkert van Heusden <mail@vanheusden.com>\n\n");
+
 	const char *cfg_file = "rtl_sdr_to_sip.ini";
 	if (argc == 2)
 		cfg_file = argv[1];
@@ -265,20 +267,22 @@ int main(int argc, char *argv[])
 
 	sdr_instance.set_frequency(default_tune_freq * 1000);
 
-	std::string down_sampling = iniparser_getstring(ini, "sdr:downsampling-method", "medium");
+	std::string downsampling = iniparser_getstring(ini, "sdr:downsampling-method", "medium");
 
 	resample_speed_t rs = RS_MEDIUM;
 
-	if (down_sampling == "best")
+	if (downsampling == "best")
 		rs = RS_SLOW;
-	else if (down_sampling == "medium")
+	else if (downsampling == "medium")
 		rs = RS_MEDIUM;
-	else if (down_sampling == "fast")
+	else if (downsampling == "fast")
 		rs = RS_FAST;
 	else
-		error_exit(false, "Downsampling method \"%s\" not known", down_sampling.c_str());
+		error_exit(false, "Downsampling method \"%s\" not known", downsampling.c_str());
 
 	audio_source as(&sdr_instance, 44100, rs);
+
+	printf("Downsampling method: %s\n", downsampling.c_str());
 
 	context_t c { &sdr_instance, &as };
 
