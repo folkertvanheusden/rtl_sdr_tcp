@@ -19,6 +19,11 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 add_compile_options(-Wall -pedantic)
 
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads)
+target_link_libraries(rtl_sdr_to_sip Threads::Threads)
+
 include(FindPkgConfig)
 
 pkg_check_modules(SAMPLERATE REQUIRED samplerate)

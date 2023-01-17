@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include <math.h>
-#include <sndfile.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string>

@@ -3,7 +3,6 @@
 #include <atomic>
 #include <math.h>
 #include <samplerate.h>
-#include <sndfile.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
