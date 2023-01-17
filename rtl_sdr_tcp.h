@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <mutex>
 #include <stdint.h>
 #include <string>
 
@@ -26,6 +27,7 @@ private:
 	std::atomic_bool  stop_flag { false   };
 
 	int               fd        { -1      };
+	std::mutex        fd_lock;
 
 	std::atomic_uint32_t frequency { 96800000 };
 

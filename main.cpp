@@ -15,6 +15,7 @@
 #include "net.h"
 #include "rtl_sdr_tcp.h"
 #include "sip.h"
+#include "time.h"
 
 
 static void resample(const float *const in_float, const int in_rate, const int n_samples, float **const out, const int out_rate, int *const out_n_samples)
@@ -36,7 +37,7 @@ static void resample(const float *const in_float, const int in_rate, const int n
         sd.src_ratio         = ratio;
 
         int rc = -1;
-        if ((rc = src_simple(&sd, SRC_SINC_BEST_QUALITY, 1)) != 0)
+        if ((rc = src_simple(&sd, SRC_SINC_MEDIUM_QUALITY, 1)) != 0)
                 printf("SIP: resample failed: %s\n", src_strerror(rc));
 }
 
@@ -100,14 +101,14 @@ public:
 
 			float  decoded[fragment_size];
 
-			double in1    = 0;
-			double qn1    = 0;
+			float  in1    = 0;
+			float  qn1    = 0;
 
 			for(int i=0; i<fragment_size; i++) {
 				int o = i * 2;
 
-				double in = (values[o + 0] - 128) / 128.0;
-				double qn = (values[o + 1] - 128) / 128.0;
+				float in = (values[o + 0] - 128) / 128.0f;
+				float qn = (values[o + 1] - 128) / 128.0f;
 
 				decoded[i] = (in1 * qn - in * qn1) / (in * in + qn * qn);
 

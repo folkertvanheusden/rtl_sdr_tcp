@@ -10,10 +10,13 @@
 #include "fifo.h"
 #include "net.h"
 #include "rtl_sdr_tcp.h"
+#include "time.h"
 
 
 void rtl_sdr_tcp::set_samplerate(const uint32_t sr)
 {
+	std::unique_lock<std::mutex> lck(fd_lock);
+
 	uint8_t msg[] = { 0x02, uint8_t(sr >> 24), uint8_t(sr >> 16), uint8_t(sr >> 8), uint8_t(sr) };
 
 	if (WRITE(fd, reinterpret_cast<const char *>(msg), sizeof msg) == -1) {
@@ -49,7 +52,7 @@ void rtl_sdr_tcp::set_frequency(const uint32_t f)
 {
 	frequency = f;
 
-	// TODO locking in case we were reconnecting concurrently
+	std::unique_lock<std::mutex> lck(fd_lock);
 
 	uint8_t msg[] = { 0x01, uint8_t(f >> 24), uint8_t(f >> 16), uint8_t(f >> 8), uint8_t(f) };
 

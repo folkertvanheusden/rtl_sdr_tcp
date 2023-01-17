@@ -12,7 +12,12 @@ add_executable(
   rtl_sdr_tcp.cpp
 )
 
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
+#set(CMAKE_BUILD_TYPE Debug)
+
+#set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+
+add_compile_options(-Wall -pedantic)
 
 include(FindPkgConfig)
 
