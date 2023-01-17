@@ -18,7 +18,9 @@
 #include "time.h"
 
 
-static void resample(const float *const in_float, const int in_rate, const int n_samples, float **const out, const int out_rate, int *const out_n_samples)
+typedef enum { RS_SLOW = SRC_SINC_BEST_QUALITY, RS_MEDIUM = SRC_SINC_MEDIUM_QUALITY, RS_FAST = SRC_SINC_FASTEST } resample_speed_t;
+
+static void resample(const float *const in_float, const int in_rate, const int n_samples, float **const out, const int out_rate, int *const out_n_samples, const resample_speed_t rs)
 {
         double ratio = out_rate / double(in_rate);
 
@@ -37,7 +39,7 @@ static void resample(const float *const in_float, const int in_rate, const int n
         sd.src_ratio         = ratio;
 
         int rc = -1;
-        if ((rc = src_simple(&sd, SRC_SINC_MEDIUM_QUALITY, 1)) != 0)
+        if ((rc = src_simple(&sd, rs, 1)) != 0)
                 printf("SIP: resample failed: %s\n", src_strerror(rc));
 }
 
@@ -53,19 +55,20 @@ static void * duplicate(const void *const org, const size_t size)
 class audio_source
 {
 private:
-	rtl_sdr_tcp *const rst { nullptr };
-	const int sample_rate  { 0       };
+	rtl_sdr_tcp *const rst    { nullptr   };
+	const int sample_rate     { 0         };
+	const resample_speed_t rs { RS_MEDIUM };
 
 	std::mutex lock;
-	float     *samples     { nullptr };
-	size_t     n_samples   { 0       };
+	float     *samples        { nullptr   };
+	size_t     n_samples      { 0         };
 	std::condition_variable cv;
-	uint64_t   t           { 0       };
+	uint64_t   t              { 0         };
 
-	std::thread *th        { nullptr };
+	std::thread *th           { nullptr   };
 
 public:
-	audio_source(rtl_sdr_tcp *const rst, const int sample_rate) : rst(rst), sample_rate(sample_rate) {
+	audio_source(rtl_sdr_tcp *const rst, const int sample_rate, const resample_speed_t rs) : rst(rst), sample_rate(sample_rate), rs(rs) {
 		th = new std::thread(std::ref(*this));
 	}
 
@@ -119,7 +122,7 @@ public:
 			float *resampled   = nullptr;
 			int    n_resampled = 0;
 
-			resample(decoded, sdr_sample_rate, fragment_size, &resampled, sample_rate, &n_resampled);
+			resample(decoded, sdr_sample_rate, fragment_size, &resampled, sample_rate, &n_resampled, rs);
 
 			{
 				std::unique_lock<std::mutex> lck(lock);
@@ -262,7 +265,20 @@ int main(int argc, char *argv[])
 
 	sdr_instance.set_frequency(default_tune_freq * 1000);
 
-	audio_source as(&sdr_instance, 44100);
+	std::string down_sampling = iniparser_getstring(ini, "sdr:downsampling-method", "medium");
+
+	resample_speed_t rs = RS_MEDIUM;
+
+	if (down_sampling == "best")
+		rs = RS_SLOW;
+	else if (down_sampling == "medium")
+		rs = RS_MEDIUM;
+	else if (down_sampling == "fast")
+		rs = RS_FAST;
+	else
+		error_exit(false, "Downsampling method \"%s\" not known", down_sampling.c_str());
+
+	audio_source as(&sdr_instance, 44100, rs);
 
 	context_t c { &sdr_instance, &as };
 
