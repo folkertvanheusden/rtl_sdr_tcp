@@ -52,15 +52,23 @@ void rtl_sdr_tcp::set_frequency(const uint32_t f)
 {
 	frequency = f;
 
-	std::unique_lock<std::mutex> lck(fd_lock);
+	{
+		std::unique_lock<std::mutex> lck(fd_lock);
 
-	uint8_t msg[] = { 0x01, uint8_t(f >> 24), uint8_t(f >> 16), uint8_t(f >> 8), uint8_t(f) };
+		uint8_t msg[] = { 0x01, uint8_t(f >> 24), uint8_t(f >> 16), uint8_t(f >> 8), uint8_t(f) };
 
-	if (WRITE(fd, reinterpret_cast<const char *>(msg), sizeof msg) == -1) {
-		close(fd);
+		if (WRITE(fd, reinterpret_cast<const char *>(msg), sizeof msg) == -1) {
+			close(fd);
 
-		fd = -1;
+			fd = -1;
+		}
 	}
+
+	// purge old data
+	int n_purge = iqs->get_n_in();
+
+	for(int i=0; i<n_purge; i++)
+		iqs->get(1);
 }
 
 void rtl_sdr_tcp::operator()()
