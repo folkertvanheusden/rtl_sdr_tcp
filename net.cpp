@@ -1,3 +1,5 @@
+// (C) 2023 by Folkert van Heusden, released under MIT license
+
 #include <errno.h>
 #include <netdb.h>
 #include <stdio.h>
@@ -10,6 +12,7 @@
 #include <sys/types.h>
 
 #include "error.h"
+
 
 int connect_to(const char *host, const int portnr)
 {

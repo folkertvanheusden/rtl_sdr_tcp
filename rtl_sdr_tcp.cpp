@@ -1,3 +1,5 @@
+// (C) 2023 by Folkert van Heusden, released under MIT license
+
 #include <atomic>
 #include <math.h>
 #include <sndfile.h>

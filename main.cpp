@@ -10,6 +10,7 @@
 #include <string.h>
 #include <thread>
 #include <unistd.h>
+#include <iniparser/iniparser.h>
 
 #include "fifo.h"
 #include "net.h"
@@ -240,17 +241,39 @@ bool cb_dtmf(const uint8_t dtmf_code, const bool is_end, const uint8_t volume, s
 
 int main(int argc, char *argv[])
 {
-	// rtl_sdr_tcp sdr_instance("10.208.30.7", 12345);
-	rtl_sdr_tcp sdr_instance("192.168.64.226", 12444);
+	const char *cfg_file = "rtl_sdr_to_sip.ini";
+	if (argc == 2)
+		cfg_file = argv[1];
 
-	sdr_instance.set_frequency(96000000);
+	dictionary *ini = iniparser_load(cfg_file);
+
+	if (!ini)
+		error_exit(false, "Cannot parse ini-file \"%s\"", cfg_file);
+
+	std::string rtl_tcp_host = iniparser_getstring(ini, "rtl-tcp:host", "127.0.0.1");
+	int         rtl_tcp_port = iniparser_getint   (ini, "rtl-tcp:port", 1234);
+
+	printf("Connecting to rtl-tcp instance on %s:%d\n", rtl_tcp_host.c_str(), rtl_tcp_port);
+
+	rtl_sdr_tcp sdr_instance(rtl_tcp_host, rtl_tcp_port);
+
+	int         default_tune_freq = iniparser_getint(ini, "sdr:default-tune-frequency", 96000);
+
+	printf("Tuning in to %.3fMHz\n", default_tune_freq / 1000.);
+
+	sdr_instance.set_frequency(default_tune_freq * 1000);
 
 	audio_source as(&sdr_instance, 44100);
 
 	context_t c { &sdr_instance, &as };
 
-	// sip s("10.208.11.13", "3737", "1234", { }, 0, 60, 44100, cb_new_session, cb_recv, cb_send, cb_end_session, cb_dtmf, &c);
-	sip s("192.168.64.13", "3737", "1234", { }, 0, 60, 44100, cb_new_session, cb_recv, cb_send, cb_end_session, cb_dtmf, &c);
+	std::string sip_host = iniparser_getstring(ini, "sip:host", "127.0.0.1");
+	std::string sip_user = iniparser_getstring(ini, "sip:user", "3737");
+	std::string sip_pass = iniparser_getstring(ini, "sip:password", "1234");
+
+	printf("Using SIP host %s with user %s\n", sip_host.c_str(), sip_user.c_str());
+
+	sip s(sip_host, sip_user, sip_pass, { }, 0, 60, 44100, cb_new_session, cb_recv, cb_send, cb_end_session, cb_dtmf, &c);
 
 	printf("started\n");
 

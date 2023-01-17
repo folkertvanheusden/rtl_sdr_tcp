@@ -1,9 +1,11 @@
-// (C) Folkert van Heusden
+// (C) 2023 by Folkert van Heusden, released under MIT license
+
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 
 void error_exit(const bool se, const char *const format, ...)
 {
